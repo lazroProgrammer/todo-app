@@ -4,24 +4,16 @@ import { Button, FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View }
 
 import { Dialog, Portal, Provider, TextInput } from "react-native-paper";
 import TodoItem from './componants/todo_item';
-  
-  
-export default function App(){
-  const [todos, setTodos] = useState([
-    { label: "Database schema", completedAt: "" },
-    { label: "Database normalization", completedAt: "" },
-    { label: "Database integration", completedAt: "" },
-    { label: "Database integration", completedAt: "" },
-    { label: "Database schema", completedAt: "" },
-    { label: "Database normalization", completedAt: "" },
-    { label: "Database integration", completedAt: "" },
-    { label: "Database integration", completedAt: "" },
-  ]);
+import * as todoApi from './services/api/todo.js';
 
-  console.log(todos);
+export default function App() {
+
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   // const [isModalVisible,setIsModalVisible] = useState(false)
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [newTodo,setNewTodo]= useState("")
+  const [newTodo, setNewTodo] = useState("")
 
   // A separate hook to track `checked` states
   const [checked, setChecked] = useState(Array(todos.length).fill(false));
@@ -32,62 +24,103 @@ export default function App(){
     }
   }, [todos]);
 
-  const toggleChecked = (index) => {
-    setChecked((prevChecked) =>
-        prevChecked.map((value, i) => (i === index ? !value : value))
-      );
-    
-      setTodos((prevTodos) =>
-        prevTodos.map((todo, i) =>
-          i === index
-            ? { ...todo, completedAt: !checked[index] ? new Date().toLocaleString() : "" }
-            : todo
-        )
-
-    );}
-  const addTodo = ()=>{
-    if (newTodo.trim()) {
-    // Add the new todo item to the list
-    setTodos((prevTodos) => [...prevTodos, { label: newTodo, completedAt: "" }]
-      );
-
-    // Reset the input field
-    setNewTodo("");
-
-    // Close the dialog
-    setDialogVisible(false);
-  } else {
-    console.log("Please enter a valid todo.");
-  }
-  }
-  const onDelete=(index)=>{
-    setTodos(todos.filter((_, i) => i !== index))
+  const fetchTodos =() => {
+    try {
+      setLoading(true); // Start loading
+      const response = todoApi.getTodos().then((response)=>{
+        console.log(response.data["todos"])
+        setTodos(response.data["todos"])
+      })
+    } catch (error) {
+      console.error('Error fetching todos:', error);
+    } finally {
+      setLoading(false); // End loading
+    }
   };
 
+  // Fetch todos on component mount
+  useEffect(() => {
+    fetchTodos()
+  }, []);
 
+  const toggleChecked = (index) => {
+    setChecked((prevChecked) =>
+      prevChecked.map((value, i) => (i === index ? !value : value))
+    );
 
+    setTodos((prevTodos) =>
+      prevTodos.map((todo, i) =>
+        i === index
+          ? { ...todo, completedAt: !checked[index] ? new Date().toLocaleString() : "" }
+          : todo
+      )
+
+    );
+  }
+  const addTodo = () => {
+    if (newTodo.trim()) {
+      // Call the API to add the new todo item
+      todoApi.addTodo(newTodo, "")
+        .then((response) => {
+          if (response && response.data) {
+            // Add the new todo item to the list
+            setTodos((prevTodos) => [
+              ...prevTodos,
+              { label: newTodo, completedAt: "" },
+            ]);
+
+            // Reset the input field
+            setNewTodo("");
+
+            // Close the dialog
+            setDialogVisible(false);
+            console.log(response)
+          } else {
+            console.log("Failed to add todo");
+          }
+        })
+        .catch((error) => {
+          console.error("Error adding todo:", error);
+          // Optionally, show an error message to the user
+        });
+    } else {
+      console.log("Please enter a valid todo.");
+    }
+  };
+  const onDelete = (index) => {
+    // console.log(todos[index]["_id"])
+    todoApi.deleteTodo(todos[index]["_id"]).then((response)=>{
+      console.log(response.status)
+      console.log("hello")
+      setTodos(todos.filter((_, i) => i !== index))
+    })
+  };
 
   return (
     <Provider>
 
-    <View style={styles.container}>
-          <StatusBar/>
-          <View style={styles.appbar}> 
-            <Text style={styles.appTitle}>
+      <View style={styles.container}>
+        <StatusBar />
+        <View style={styles.appbar}>
+          <Text style={styles.appTitle}>
             The best app
-            </Text>
-          </View>
-          <FlatList data={todos} keyExtractor={(_item, index)=> index.toString()}
-            renderItem={({item,index})=>
-              <TodoItem index={index}  label={item.label} completedAt={item.completedAt} checked={checked[index]} onToggle={() => toggleChecked(index)} onDelete={()=> onDelete(index)}/>
-              }>
-          </FlatList>
-          <View style={styles.fabContainer}>
-  <TouchableOpacity style={styles.fab} onPress={() => setDialogVisible(true)}>
-    <Ionicons name='add' size={30} color={"white"}/>
-  </TouchableOpacity>
-</View>
-      {/*<Modal
+          </Text>
+        </View>
+        {loading ? (
+        <Text>Loading...</Text>
+      ) : (
+        <FlatList data={Array.isArray(todos) ? todos : []} keyExtractor={(_item, index) => index.toString()}
+          renderItem={({ item, index }) =>
+            <TodoItem index={index} label={item["label"]} completedAt={item["completedAt"]} checked={checked[index]} onToggle={() => toggleChecked(index)} onDelete={() => onDelete(index)} />
+          }>
+        </FlatList>
+          )} 
+        <View style={styles.fabContainer}>
+          <TouchableOpacity style={styles.fab} onPress={() => setDialogVisible(true)}>
+            <Ionicons name='add' size={30} color={"white"} />
+          </TouchableOpacity>
+        </View>
+        {/*<Modal
         // statusBarTranslucent={true}
         transparent={true}
         animationType="slide"
@@ -109,7 +142,7 @@ export default function App(){
         </View>
         </View>
         </Modal>*/}
-      <Portal>
+        <Portal>
           <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
             <Dialog.Title>Add Todo</Dialog.Title>
             <Dialog.Content>
@@ -118,7 +151,7 @@ export default function App(){
                 value={newTodo}
                 onChangeText={setNewTodo}
                 style={styles.input}
-                />
+              />
             </Dialog.Content>
             <Dialog.Actions style={styles.modalButtons}>
               <Button title="Cancel" onPress={() => setDialogVisible(false)} />
@@ -126,35 +159,35 @@ export default function App(){
             </Dialog.Actions>
           </Dialog>
         </Portal>
-    </View>
-</Provider>
+      </View>
+    </Provider>
   );
 };
 // const todos= [{
-  //   "label":"database shema",
-  //   "checked":false,
-  //   "completedAt":"",
-  // },{
-    //   "label":"database normalization",
-    //   "checked":true,
-    //   "completedAt":"",
-    // },{
-      //   "label":"database integration",
-      //   "checked":false,
-      //   "completedAt":"",
-      // },]
-      
-      const styles = StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: "#fff",
+//   "label":"database shema",
+//   "checked":false,
+//   "completedAt":"",
+// },{
+//   "label":"database normalization",
+//   "checked":true,
+//   "completedAt":"",
+// },{
+//   "label":"database integration",
+//   "checked":false,
+//   "completedAt":"",
+// },]
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
   },
   appbar: {
     height: 60,
     backgroundColor: "teal",
     justifyContent: "center",
     paddingHorizontal: 16,
-    marginBottom:6,
+    marginBottom: 6,
     elevation: 4, // Android shadow
     shadowColor: "#000", // iOS shadow
     shadowOffset: { width: 0, height: 2 },
