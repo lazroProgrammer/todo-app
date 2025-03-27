@@ -8,19 +8,16 @@ A full-stack to-do application built using **React Native** for the frontend and
 - 📅 Mark tasks as completed
 - 🔄 Persistent storage with MongoDB
 - 📡 RESTful API with Express.js
-- 🔐 User authentication (optional)
 
 ## Tech Stack
 
 ### Frontend
 - React Native (Expo or Bare Workflow)
-- React Navigation
 - Axios for API requests
 
 ### Backend
 - Node.js with Express.js
 - MongoDB with Mongoose
-- JWT Authentication (optional)
 
 ## Installation
 
@@ -36,10 +33,13 @@ A full-stack to-do application built using **React Native** for the frontend and
    ```
 3. Set up environment variables (`.env` file):
    ```sh
+   BACKEND_URL= your backend URL
    MONGO_URI=your_mongodb_connection_string
    PORT=5000
-   JWT_SECRET=your_secret_key
    ```
+4. Add your mongodb database:
+   ```sh
+   host it locally
 4. Start the server:
    ```sh
    npm start
@@ -64,8 +64,8 @@ A full-stack to-do application built using **React Native** for the frontend and
 |--------|---------------|--------------------------|
 | GET    | /api/todos    | Fetch all tasks         |
 | POST   | /api/todos    | Add a new task          |
-| PUT    | /api/todos/:id | Update a task          |
-| DELETE | /api/todos/:id | Delete a task          |
+| PUT    | /api/todos/:id | Update a task  (later) |
+| DELETE | /api/todos/:id | Delete a task  (later  |
 
 ## Contributing
 Feel free to submit a pull request or report issues!
