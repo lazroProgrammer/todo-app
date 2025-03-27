@@ -34,8 +34,6 @@ A full-stack to-do application built using **React Native** for the frontend and
 3. Set up environment variables (`.env` file):
    ```sh
    BACKEND_URL= your backend URL
-   MONGO_URI=your_mongodb_connection_string
-   PORT=5000
    ```
 4. Add your mongodb database:
    ```sh
