@@ -63,7 +63,7 @@ A full-stack to-do application built using **React Native** for the frontend and
 | GET    | /api/todos    | Fetch all tasks         |
 | POST   | /api/todos    | Add a new task          |
 | PUT    | /api/todos/:id | Update a task  (later) |
-| DELETE | /api/todos/:id | Delete a task  (later  |
+| DELETE | /api/todos/:id | Delete a task  (later)  |
 
 ## Contributing
 Feel free to submit a pull request or report issues!
